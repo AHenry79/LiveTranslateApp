@@ -1,10 +1,13 @@
 import os
+import deepl
 from dotenv import load_dotenv
 import azure.cognitiveservices.speech as speechsdk
 
 load_dotenv()
 
 device = os.getenv("device")
+deepl_api_key = os.getenv("deepl_api_key")
+translator = deepl.Translator(deepl_api_key)
 
 def audio_to_text(api_key, region):
     speech_config = speechsdk.SpeechConfig(subscription=api_key, region=region)
@@ -23,7 +26,12 @@ def audio_to_text(api_key, region):
         speech_recognition_result = speech_recognizer.recognize_once_async().get()
 
         if speech_recognition_result.reason == speechsdk.ResultReason.RecognizedSpeech:
+            text = speech_recognition_result.text
             print("Recognized: {}".format(speech_recognition_result.text))
+
+            translation = translator.translate_text(text, target_lang="JA")
+            if translation:
+                print("Translation (JA): {}".format(translation))
             if "stop session" in speech_recognition_result.text.lower():
                 print("Session ended by user.")
                 break
